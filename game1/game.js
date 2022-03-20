@@ -133,6 +133,8 @@ let cursors;
 function update () {
   cursors = this.input.keyboard.createCursorKeys()
   
+  if (gameOver) return 
+  
   if (cursors.left.isDown) {
     player.setVelocityX(-160)
     player.anims.play('left', true)    
