@@ -5,9 +5,12 @@ const config = {
   physics: {
     default: 'arcade',
     arcade: {
-      gravity: { y : 300 },
+      gravity: { y : 400 },
       debug: false,
     }
+  },
+  audio: {
+    disableWebAudio: true
   },
   scene: {
     preload: preload,
@@ -16,19 +19,22 @@ const config = {
   }
 }
 
-const game = new Phaser.Game(config);
+let game = new Phaser.Game(config);
 
 function preload () {
   // assets loading
-  this.load.image('sky', 'assets/sky.png')
-  this.load.image('ground', 'assets/platform.png')
-  this.load.image('star', 'assets/star.png')
-  this.load.image('bomb', 'assets/bomb.png')
+  this.load.image('sky', 'game1/assets/sky.png')
+  this.load.image('ground', 'game1/assets/platform.png')
+  this.load.image('star', 'game1/assets/star.png')
+  this.load.image('bomb', 'game1/assets/bomb.png')
 
-  this.load.spritesheet('dude', 'assets/dude.png', {
+  this.load.spritesheet('dude', 'game1/assets/dude.png', {
     frameWidth: 32, frameHeight: 48
   })
 
+  this.load.audio('jump', 'game1/assets/audio/jump.mp3')
+  this.load.audio('notification', 'game1/assets/audio/notification.mp3')
+  this.load.audio('game-over', 'game1/assets/audio/game-over.mp3')
 }
 
 let platforms
@@ -38,6 +44,9 @@ let bombs
 let score = 0
 let scoreText
 let gameOver = false
+let soundJump;
+let soundGameOver;
+let soundNotification;
 
 function create () {
   /* 
@@ -125,6 +134,10 @@ function create () {
   // SCORE
   scoreText = this.add.text(16, 16, 'score: 0', {fontSize: '32px', fill: '#000'})
 
+  // sound
+  soundJump = this.sound.add('jump', {})
+  soundNotification = this.sound.add('notification')
+  soundGameOver = this.sound.add('game-over')
 }
 
 
@@ -148,8 +161,9 @@ function update () {
     player.anims.play('turn')
   }
 
-  if (cursors.up.isDown && player.body.touching.down) {
-    player.setVelocityY(-480)
+  if ((cursors.up.isDown || cursors.space.isDown) && player.body.touching.down) {
+    player.setVelocityY(-580)
+    soundJump.play()
   }
 
 }
@@ -159,6 +173,8 @@ function collectStar (player, star) {
   star.disableBody(true, true)  
   score += 10
   scoreText.setText('Score: ' + score)
+
+  soundNotification.play()
 
   if (stars.countActive(true) === 0) {
     
@@ -179,4 +195,11 @@ function hitBomb (player, bomb) {
   player.setTint(0xff0000)
   player.anims.play('turn')
   gameOver = true
+  soundGameOver.play()
+
+  setTimeout(()=>{    
+    this.sys.game.destroy(true);
+    game = new Phaser.Game(config);      
+  }, 3000)
+  
 }
